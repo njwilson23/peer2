@@ -3,12 +3,14 @@ package bibtex
 import (
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
 type Entry struct {
 	Title     string
 	Author    string
+	Year      int
 	Journal   string
 	BibTeXkey string
 }
@@ -51,12 +53,18 @@ func ParseLine(s string) (string, string, error) {
 func ParseEntry(lines []string) (Entry, error) {
 	var err error
 	var title, author, journal, key string
+	var year int
 	for _, line := range lines {
 		switch k, v, _ := ParseLine(line); k {
 		case "author":
 			author = v
 		case "title":
 			title = v
+		case "year":
+			year, err = strconv.Atoi(v)
+			if err != nil {
+				break
+			}
 		case "journal":
 			journal = v
 		case "BibTeXkey":
@@ -97,10 +105,50 @@ func Read(fnm string, entries chan Entry) {
 			}
 			start = i
 		} else if count < 0 {
-			err = ParseError{"malformed bibtex"}
+			fmt.Println("malformed bibtex has more closing than opening braces")
 			break
 		}
+	}
+}
 
+// Removes LaTeX-y symbols from *s*. If *lc* is true, then result is converted
+// to lower case
+func sanitize(s string, lc bool) string {
+	out := s
+	if strings.Contains(s, "\\\"") {
+		out = strings.Replace(s, "\\\"", "", -1)
+	}
+	if strings.ContainsAny(s, "{}") {
+		out = strings.Replace(s, "{", "", -1)
+		out = strings.Replace(s, "}", "", -1)
+	}
+	if lc {
+		out = strings.ToLower(out)
+	}
+	return out
+}
+
+// Search a slice of BibTeX entries for author text matching a substring
+func SearchAuthor(entries []Entry, s string) []Entry {
+	found := make([]Entry, 0)
+	for _, entry := range entries {
+		auth := sanitize(entry.Author, false)
+		if strings.Contains(auth, s) {
+			found = append(found, entry)
+		}
+	}
+	return found
+}
+
+// Search a slice of BibTeX entries for author text matching a substring
+func SearchTitle(entries []Entry, s string) []Entry {
+	found := make([]Entry, 0)
+	s = strings.ToLower(s)
+	for _, entry := range entries {
+		title := sanitize(entry.Title, true)
+		if strings.Contains(title, s) {
+			found = append(found, entry)
+		}
 	}
 	return found
 }
