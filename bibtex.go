@@ -14,7 +14,11 @@ type Entry struct {
 }
 
 func (entry Entry) String() string {
-	return fmt.Sprintf("\"%v\", by %v in %v", entry.Title, entry.Author, entry.Journal)
+	return fmt.Sprintf("@%v\nTitle: \"%v\"\nAuthor: %v\nJournal: %v",
+		entry.BibTeXkey,
+		entry.Title,
+		entry.Author,
+		entry.Journal)
 }
 
 type ParseError struct {
@@ -25,6 +29,7 @@ func (err ParseError) Error() string {
 	return fmt.Sprintf(err.Message)
 }
 
+// Given a line from a BibTeX file, attempt to return a key : value pair
 func ParseLine(s string) (string, string, error) {
 	var key, value string
 	var err error
@@ -41,6 +46,8 @@ func ParseLine(s string) (string, string, error) {
 	return key, value, err
 }
 
+// Given an array of lines representing a complete BibTeX entry, return an Entry
+// type
 func ParseEntry(lines []string) (Entry, error) {
 	var err error
 	var title, author, journal, key string
@@ -62,13 +69,14 @@ func ParseEntry(lines []string) (Entry, error) {
 }
 
 // Open and read a BibTeX database and return an array of BibTeX entries
-func Read(fnm string, entries []Entry) error {
+func Read(fnm string, entriesPtr *[]Entry) error {
 
 	data, err := ioutil.ReadFile(fnm)
 	if err != nil {
 		fmt.Println(err)
 	}
 	lines := strings.Split(string(data), "\n")
+	entries := *entriesPtr
 
 	// Split into entries, and parse them one by one
 	// I suppose this could be done asynchronously...
@@ -83,16 +91,18 @@ func Read(fnm string, entries []Entry) error {
 		if count == 0 && inside_entry {
 			entry, err := ParseEntry(lines[start : i+1])
 			inside_entry = false
-			fmt.Println(entry)
 			if err == nil {
 				entries = append(entries, entry)
+			} else {
+				fmt.Println(err)
 			}
 			start = i
 		} else if count < 0 {
-			err = ParseError{"mal-formed bibtex"}
+			err = ParseError{"malformed bibtex"}
 			break
 		}
 
 	}
+	*entriesPtr = entries
 	return err
 }
