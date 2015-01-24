@@ -140,13 +140,24 @@ func SearchAuthor(entries []Entry, s string) []Entry {
 	return found
 }
 
-// Search a slice of BibTeX entries for author text matching a substring
+// Search a slice of BibTeX entries for title text matching a substring
 func SearchTitle(entries []Entry, s string) []Entry {
 	found := make([]Entry, 0)
 	s = strings.ToLower(s)
 	for _, entry := range entries {
 		title := sanitize(entry.Title, true)
 		if strings.Contains(title, s) {
+			found = append(found, entry)
+		}
+	}
+	return found
+}
+
+// Search a slice of BibTeX entries for year
+func SearchYear(entries []Entry, ymin int, ymax int) []Entry {
+	found := make([]Entry, 0)
+	for _, entry := range entries {
+		if (ymin <= entry.Year) && (entry.Year <= ymax) {
 			found = append(found, entry)
 		}
 	}

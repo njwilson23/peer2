@@ -71,3 +71,13 @@ func TestSearchTitle(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSearchYear(t *testing.T) {
+	var entries, results []Entry
+	entries = readtoarray("test.bib")
+	results = SearchYear(entries, 2005, 2013)
+	if len(results) != 2 {
+		fmt.Println(len(results), "entries found for 2005-2013 (should be 2)")
+		t.Fail()
+	}
+}
