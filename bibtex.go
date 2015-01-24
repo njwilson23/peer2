@@ -16,10 +16,11 @@ type Entry struct {
 }
 
 func (entry Entry) String() string {
-	return fmt.Sprintf("@%v\nTitle: \"%v\"\nAuthor: %v\nJournal: %v",
+	return fmt.Sprintf("@%v\nTitle: \"%v\"\nAuthor: %v\nYear: %v\nJournal: %v\n",
 		entry.BibTeXkey,
 		entry.Title,
 		entry.Author,
+		entry.Year,
 		entry.Journal)
 }
 
@@ -38,7 +39,7 @@ func ParseLine(s string) (string, string, error) {
 	if strings.ContainsRune(s, '=') {
 		pieces := strings.Split(s, "=")
 		key = strings.ToLower(strings.Trim(pieces[0], " \t"))
-		value = strings.Trim(pieces[1], " \t{},")
+		value = strings.Trim(pieces[1], " \t{},\"")
 	} else if strings.HasPrefix(s, "@") {
 		key = "BibTeXkey"
 		value = strings.TrimSuffix(strings.Split(s, "{")[1], ",")
@@ -47,6 +48,23 @@ func ParseLine(s string) (string, string, error) {
 	}
 	return key, value, err
 }
+
+// BibTeX can use either curly braces or quotation marks to enclose content.
+// This indentifies which convention is being used.
+/*func enclosingmark(line string) (rune, error) {
+	var sym rune
+	var err error
+	idx := strings.Index(line, "=")
+	if idx == -1 {
+		err = ParseError{"no equals sign to split tag from content"}
+		sym = ' '
+	} else {
+		jdx := strings.IndexAny(line[idx:], "{\"")
+		r := []rune(line)
+		sym = r[idx+jdx]
+	}
+	return sym, err
+}*/
 
 // Given an array of lines representing a complete BibTeX entry, return an Entry
 // type
@@ -70,10 +88,79 @@ func ParseEntry(lines []string) (Entry, error) {
 		case "BibTeXkey":
 			key = v
 		}
-
 	}
 	entry := Entry{title, author, year, journal, key}
 	return entry, err
+}
+
+func combinerunninglines(lines []string) []string {
+	var depth, start int
+	intag := false
+	joinedlines := make([]string, 0)
+
+	for i, line := range lines {
+		depth += strings.Count(lines[i], "{")
+		depth -= strings.Count(lines[i], "}")
+
+		if depth > 1 {
+			// inside a tag
+			if !intag {
+				start = i
+				intag = true
+			}
+		} else {
+			if intag {
+				line = strings.Join(lines[start:i+1], " ")
+				intag = false
+			} else {
+				line = lines[i]
+			}
+			joinedlines = append(joinedlines, line)
+		}
+	}
+	return joinedlines
+}
+
+func ParseEntries(lines []string, entries chan Entry) error {
+	var depth, start int
+	var err error
+	joinedlines := combinerunninglines(lines)
+	inentry := false
+	for i, line := range joinedlines {
+		depth += strings.Count(line, "{")
+		depth -= strings.Count(line, "}")
+		if depth == 0 {
+			if inentry {
+				// end of entry
+				inentry = false
+				entry, err := ParseEntry(lines[start : i+1])
+				if err == nil {
+					entries <- entry
+				} else {
+					fmt.Println(err)
+				}
+			}
+		} else if depth == 1 {
+			// inside entry but not tag
+			if !inentry {
+				inentry = true
+				start = i
+			}
+		} else {
+			// should never happen
+			if depth > 1 {
+				err = ParseError{"running lines"}
+			} else if depth < 1 {
+				err = ParseError{"malformed BibTeX: negative bracket depth"}
+			}
+			break
+		}
+		i++
+		if i == len(lines) {
+			break
+		}
+	}
+	return err
 }
 
 // Open and read a BibTeX database and return an array of BibTeX entries
@@ -86,28 +173,9 @@ func Read(fnm string, entries chan Entry) {
 		return
 	}
 	lines := strings.Split(string(data), "\n")
-
-	var count, start int
-	inside_entry := false
-	for i, line := range lines {
-		count += strings.Count(line, "{")
-		count -= strings.Count(line, "}")
-		if !inside_entry && count != 0 {
-			inside_entry = true
-		}
-		if count == 0 && inside_entry {
-			entry, err := ParseEntry(lines[start : i+1])
-			inside_entry = false
-			if err == nil {
-				entries <- entry
-			} else {
-				fmt.Println(err)
-			}
-			start = i
-		} else if count < 0 {
-			fmt.Println("malformed bibtex has more closing than opening braces")
-			break
-		}
+	err = ParseEntries(lines, entries)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
 
