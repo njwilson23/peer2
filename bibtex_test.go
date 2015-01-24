@@ -81,3 +81,19 @@ func TestSearchYear(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestSanitize(t *testing.T) {
+	difficult_name := "Bengt M{\\aa}rtensson"
+	if sanitize(difficult_name, false) != "Bengt Maartensson" {
+		fmt.Println("expected 'Bengt Maartensson' but got",
+			sanitize(difficult_name, false))
+		t.Fail()
+	}
+
+	difficult_word := "M\\'elange"
+	if sanitize(difficult_word, true) != "melange" {
+		fmt.Println("expected 'melange' but got",
+			sanitize(difficult_word, true))
+		t.Fail()
+	}
+}

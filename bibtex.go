@@ -61,7 +61,7 @@ func ParseEntry(lines []string) (Entry, error) {
 		case "title":
 			title = v
 		case "year":
-			year, err = strconv.Atoi(v)
+			year, err = strconv.Atoi(strings.Trim(v, "\""))
 			if err != nil {
 				break
 			}
@@ -116,11 +116,13 @@ func Read(fnm string, entries chan Entry) {
 func sanitize(s string, lc bool) string {
 	out := s
 	if strings.Contains(s, "\\\"") {
-		out = strings.Replace(s, "\\\"", "", -1)
+		out = strings.Replace(out, "\\\"", "", -1)
 	}
-	if strings.ContainsAny(s, "{}") {
-		out = strings.Replace(s, "{", "", -1)
-		out = strings.Replace(s, "}", "", -1)
+	if strings.ContainsAny(s, "{}\\'") {
+		out = strings.Replace(out, "{", "", -1)
+		out = strings.Replace(out, "}", "", -1)
+		out = strings.Replace(out, "\\", "", -1)
+		out = strings.Replace(out, "'", "", -1)
 	}
 	if lc {
 		out = strings.ToLower(out)
