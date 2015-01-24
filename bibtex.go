@@ -64,22 +64,21 @@ func ParseEntry(lines []string) (Entry, error) {
 		}
 
 	}
-	entry := Entry{title, author, journal, key}
+	entry := Entry{title, author, year, journal, key}
 	return entry, err
 }
 
 // Open and read a BibTeX database and return an array of BibTeX entries
-func Read(fnm string, entriesPtr *[]Entry) error {
-
+// This prints any errors raised
+func Read(fnm string, entries chan Entry) {
+	defer close(entries)
 	data, err := ioutil.ReadFile(fnm)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	lines := strings.Split(string(data), "\n")
-	entries := *entriesPtr
 
-	// Split into entries, and parse them one by one
-	// I suppose this could be done asynchronously...
 	var count, start int
 	inside_entry := false
 	for i, line := range lines {
@@ -92,7 +91,7 @@ func Read(fnm string, entriesPtr *[]Entry) error {
 			entry, err := ParseEntry(lines[start : i+1])
 			inside_entry = false
 			if err == nil {
-				entries = append(entries, entry)
+				entries <- entry
 			} else {
 				fmt.Println(err)
 			}
@@ -103,6 +102,5 @@ func Read(fnm string, entriesPtr *[]Entry) error {
 		}
 
 	}
-	*entriesPtr = entries
-	return err
+	return found
 }
