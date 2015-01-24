@@ -133,7 +133,7 @@ func ParseEntries(lines []string, entries chan Entry) error {
 			if inentry {
 				// end of entry
 				inentry = false
-				entry, err := ParseEntry(lines[start : i+1])
+				entry, err := ParseEntry(joinedlines[start : i+1])
 				if err == nil {
 					entries <- entry
 				} else {

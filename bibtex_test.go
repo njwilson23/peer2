@@ -19,11 +19,10 @@ func readtoarray(fnm string) []Entry {
 
 func TestReadEntries(t *testing.T) {
 	entries := make(chan Entry)
-	go Read("glacier.bib", entries)
+	go Read("macsyma.bib", entries)
 	i := 0
 	for {
-		e, ok := <-entries
-		fmt.Println(e)
+		_, ok := <-entries
 		if !ok {
 			break
 		} else {
@@ -40,9 +39,9 @@ func TestSearchAuthor(t *testing.T) {
 	entries := readtoarray("macsyma.bib")
 
 	// Test 1
-	results := SearchAuthor(entries, "Pavelle")
-	if len(results) != 9 {
-		fmt.Println(len(results), "entries found matching 'Padget' (should be 9)")
+	results := SearchAuthor(entries, "Padget")
+	if len(results) != 1 {
+		fmt.Println(len(results), "entries found matching 'Padget' (should be 1)")
 		t.Fail()
 	}
 
@@ -58,7 +57,7 @@ func TestSearchTitle(t *testing.T) {
 	entries := readtoarray("macsyma.bib")
 
 	// Test 1
-	results := SearchTitle(entries, "variational")
+	results := SearchTitle(entries, "variational formulation")
 	if len(results) == 0 {
 		fmt.Println("No entries found matching 'variational formulation'")
 		t.Fail()
@@ -110,7 +109,6 @@ func TestCombineRunningLines(t *testing.T) {
 	}
 	lines := strings.Split(string(data), "\n")
 	joinedlines := combinerunninglines(lines)
-
 	if len(joinedlines) != 11655 {
 		fmt.Println(fmt.Sprintf("unexpected number of lines (%v)", len(joinedlines)))
 	}
