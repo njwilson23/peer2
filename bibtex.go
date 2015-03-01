@@ -3,6 +3,7 @@ package bibtex
 import (
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -95,12 +96,26 @@ func ParseEntry(lines []string) (Entry, error) {
 
 func combinerunninglines(lines []string) []string {
 	var depth, start int
-	intag := false
+	var joinedline string
+	var linestojoin []string
 	joinedlines := make([]string, 0)
+	intag := false
+	inquote := false
 
-	for i, line := range lines {
+	re_quote := regexp.MustCompile(`[^\\]\"`)
+
+	for i := range lines {
 		depth += strings.Count(lines[i], "{")
 		depth -= strings.Count(lines[i], "}")
+
+		if len(re_quote.FindAllString(lines[i], -1)) == 1 {
+			inquote = !inquote
+			if inquote {
+				depth += 1
+			} else {
+				depth -= 1
+			}
+		}
 
 		if depth > 1 {
 			// inside a tag
@@ -110,12 +125,17 @@ func combinerunninglines(lines []string) []string {
 			}
 		} else {
 			if intag {
-				line = strings.Join(lines[start:i+1], " ")
+				linestojoin = lines[start : i+1]
+				for j, line := range linestojoin {
+					line = strings.TrimSpace(line)
+					linestojoin[j] = line
+				}
+				joinedline = strings.Join(linestojoin, " ")
 				intag = false
 			} else {
-				line = lines[i]
+				joinedline = lines[i]
 			}
-			joinedlines = append(joinedlines, line)
+			joinedlines = append(joinedlines, joinedline)
 		}
 	}
 	return joinedlines

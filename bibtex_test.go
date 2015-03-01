@@ -19,6 +19,24 @@ func readtoarray(fnm string) []Entry {
 
 func TestReadEntries(t *testing.T) {
 	entries := make(chan Entry)
+	go Read("test.bib", entries)
+	i := 0
+	for {
+		_, ok := <-entries
+		if !ok {
+			break
+		} else {
+			i += 1
+		}
+	}
+	if i != 3 {
+		fmt.Println(i, "entries read (should be 3)")
+		t.Fail()
+	}
+}
+
+func TestReadEntriesMacsyma(t *testing.T) {
+	entries := make(chan Entry)
 	go Read("macsyma.bib", entries)
 	i := 0
 	for {
@@ -29,8 +47,8 @@ func TestReadEntries(t *testing.T) {
 			i += 1
 		}
 	}
-	if i != 527 {
-		fmt.Println(i, "entries read (should be 527)")
+	if i != 446 {
+		fmt.Println(i, "entries read (should be 446)")
 		t.Fail()
 	}
 }
@@ -70,7 +88,7 @@ func TestSearchTitle(t *testing.T) {
 	// Test 2 - title searches should be case-insensitive
 	/*results = SearchTitle(entries, "jakobshavn")
 	if len(results) == 0 {
-		fmt.Println("No entries found matching 'jakobshaven'")
+		fmt.Println("No entries found matching 'jakobshavn'")
 		t.Fail()
 	}*/
 }
@@ -79,7 +97,7 @@ func TestSearchYear(t *testing.T) {
 	entries := readtoarray("test.bib")
 	results := SearchYear(entries, 2005, 2013)
 	if len(results) != 2 {
-		fmt.Println(len(results), "entries found for 2005-2013 (should be 2)")
+		fmt.Sprintln("%v entries found for 2005-2013 (should be 2)", len(results))
 		t.Fail()
 	}
 }
@@ -100,7 +118,77 @@ func TestSanitize(t *testing.T) {
 	}
 }
 
-func TestCombineRunningLines(t *testing.T) {
+func TestCombineRunningLinesBraces(t *testing.T) {
+	entry_str := `@Article{Roache:1985:NAG,
+  author =       {Patrick J. Roache and Stanly Steinberg},
+  title =        {New Approach to Grid Generation Using a Variational
+                 Formulation},
+  journal =      {AIAA Paper},
+  pages =        {360--370},
+  year =         {1985},
+  CODEN =        {AAPRAQ},
+  ISSN =         {0146-3705},
+  bibdate =      {Wed Jan 15 15:35:13 MST 1997},
+  bibsource =    {Compendex database;
+                 http://www.math.utah.edu/pub/tex/bib/macsyma.bib},
+  acknowledgement = ack-nhfb,
+  affiliationaddress = {Ecodynamics Research Associates, Albuquerque,
+                 NM, USA},
+  classification = {631; 921; 931},
+  conference =   {Collection of Technical Papers --- AIAA 7th
+                 Computational Fluid Dynamics Conference.},
+  journalabr =   {AIAA Paper},
+  keywords =     {behavioral errors; computational fluid dynamics; fluid
+                 dynamics; mathematical techniques; symbolic
+                 manipulation; Thompson-Thames-Mastin method (TTM
+                 method); VAX 780; Vaxima},
+  meetingaddress = {Cincinnati, OH, Engl},
+  sponsor =      {AIAA, New York, NY, USA},
+}`
+	entry_strs := strings.Split(entry_str, "\n")
+	joinedlines := combinerunninglines(entry_strs)
+	if len(joinedlines) != 19 {
+		fmt.Println("wrong number of line in joined entry:", len(joinedlines))
+		t.Fail()
+	}
+}
+
+func TestCombineRunningLinesQuotes(t *testing.T) {
+	entry_str := `@Article{Roache:1985:NAG,
+  author =       "Patrick J. Roache and Stanly Steinberg",
+  title =        "New Approach to Grid Generation Using a Variational
+                 Formulation",
+  journal =      "AIAA Paper",
+  pages =        "360--370",
+  year =         "1985",
+  CODEN =        "AAPRAQ",
+  ISSN =         "0146-3705",
+  bibdate =      "Wed Jan 15 15:35:13 MST 1997",
+  bibsource =    "Compendex database;
+                 http://www.math.utah.edu/pub/tex/bib/macsyma.bib",
+  acknowledgement = ack-nhfb,
+  affiliationaddress = "Ecodynamics Research Associates, Albuquerque,
+                 NM, USA",
+  classification = "631; 921; 931",
+  conference =   "Collection of Technical Papers --- AIAA 7th
+                 Computational Fluid Dynamics Conference.",
+  journalabr =   "AIAA Paper",
+  keywords =     "behavioral errors; computational fluid dynamics; fluid
+                 dynamics; mathematical techniques; symbolic
+                 manipulation; Thompson-Thames-Mastin method (TTM
+                 method); VAX 780; Vaxima",
+  meetingaddress = "Cincinnati, OH, Engl",
+  sponsor =      "AIAA, New York, NY, USA",
+}`
+	entry_strs := strings.Split(entry_str, "\n")
+	joinedlines := combinerunninglines(entry_strs)
+	if len(joinedlines) != 19 {
+		fmt.Println("wrong number of line in joined entry:", len(joinedlines))
+		t.Fail()
+	}
+}
+
+func TestCombineRunningLinesInFile(t *testing.T) {
 
 	data, err := ioutil.ReadFile("macsyma.bib")
 	if err != nil {
@@ -109,7 +197,7 @@ func TestCombineRunningLines(t *testing.T) {
 	}
 	lines := strings.Split(string(data), "\n")
 	joinedlines := combinerunninglines(lines)
-	if len(joinedlines) != 11655 {
+	if len(joinedlines) != 6384 {
 		fmt.Println(fmt.Sprintf("unexpected number of lines (%v)", len(joinedlines)))
 	}
 }
