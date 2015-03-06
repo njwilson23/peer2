@@ -25,6 +25,18 @@ func (entry Entry) String() string {
 		entry.Journal)
 }
 
+func (e Entry) TestAuthor(auth string) bool {
+	return auth == "" || strings.Contains(e.Author, auth)
+}
+
+func (e Entry) TestTitle(title string) bool {
+	return title == "" || strings.Contains(e.Title, title)
+}
+
+func (e Entry) TestYear(year int) bool {
+	return year == -999 || e.Year == year
+}
+
 type ParseError struct {
 	Message string
 }
