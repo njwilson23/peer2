@@ -1,0 +1,12 @@
+# This is the default PDF reader to use when invoked with the '-o' flag
+reader: "evince"
+
+bibfiles:
+  - "biblio.bib"
+  - "biblio2.bib"
+
+# Search roots are the root nodes for the document scanner
+searchroots:
+  - "~/Downloads"
+  - "~/Documents/pdfs"
+

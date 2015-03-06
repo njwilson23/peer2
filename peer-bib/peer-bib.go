@@ -4,28 +4,15 @@ import (
 	"flag"
 	"fmt"
 	"github.com/njwilson23/peer2/bibtex"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"github.com/njwilson23/peer2/config"
 )
 
 // USAGE:
-// peer [query] [--author query] [--year query] [--title query] [--file query]
-
-type Config struct {
-	Reader      string
-	Bibfiles    []string
-	SearchRoots []string
-}
+// peer-bib [query] [--author query] [--year query] [--title query] [--file query]
 
 func main() {
 
-	// Parse configuration
-	var config Config
-	configData, err := ioutil.ReadFile(".peer.yaml")
-	if err != nil {
-		fmt.Println("ERROR:", err)
-	}
-	err = yaml.Unmarshal(configData, &config)
+	config := config.ParseConfig(".peer.yaml")
 
 	// Parse command line options
 	//fnmSearch := flag.String("file", os.Args[1], "Search filenames")
@@ -44,7 +31,7 @@ func main() {
 
 	// Search BibTeX entries for matches
 	//matches := make([]bibtex.Entry, 0)
-	//var matches []bibtex.Entry
+	var matches []bibtex.Entry
 	for _, bibfile := range config.Bibfiles {
 
 		entries := make(chan bibtex.Entry)
@@ -56,16 +43,16 @@ func main() {
 				entry.TestTitle(*titleSearch) &&
 				entry.TestYear(*yearSearch) {
 				//fmt.Println(entry)
-				fmt.Println(fmt.Sprintf("%v (%v), \"%v\"", entry.Author, entry.Year, entry.Title))
-				//matches = append(matches, entry)
+				//fmt.Println(fmt.Sprintf("%v (%v), \"%v\"", entry.Author, entry.Year, entry.Title))
+				matches = append(matches, entry)
 			}
 
 		}
 	}
 
 	// Print the results
-	/*for entry := range matches {
+	for _, entry := range matches {
 		fmt.Println(fmt.Sprintf("%v (%v), \"%v\"", entry.Author, entry.Year, entry.Title))
-	}*/
+	}
 
 }
