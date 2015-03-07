@@ -1,8 +1,14 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 )
+
+func TestFindConfig(t *testing.T) {
+	fnm, _ := FindConfig()
+	fmt.Println(fnm)
+}
 
 func TestLoadConfig(t *testing.T) {
 
