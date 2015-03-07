@@ -1,10 +1,11 @@
 package main
 
 import (
-	//"flag"
+	"flag"
 	"fmt"
 	"github.com/njwilson23/peer2/config"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -30,10 +31,19 @@ func SearchRoot(root string, searchstr string, out *[]string) {
 
 func main() {
 
-	var searchstr string
-	config := config.ParseConfig(".peer.yaml")
-	if len(os.Args) != 1 {
-		searchstr = os.Args[1]
+	var searchstrs []string
+	open := flag.Int("o", 0, "Open option N using the configured reader")
+	printpath := flag.Bool("p", false, "Print full paths")
+	flag.Parse()
+
+	configPath, err := config.FindConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	config := config.ParseConfig(configPath)
+
+	if len(flag.Args()) != 0 {
+		searchstrs = flag.Args()
 	} else {
 		fmt.Println("ERROR: must provide at least one search query")
 		os.Exit(1)
@@ -46,11 +56,20 @@ func main() {
 	// Search each directory root
 	results := make([]string, 0)
 	for _, root := range config.SearchRoots {
-		SearchRoot(root, searchstr, &results)
+		SearchRoot(root, &searchstrs, &results)
 	}
 
-	// Print matches
-	for i, match := range results {
-		fmt.Println(i+1, filepath.Base(match))
+	if *open != 0 {
+		cmd := exec.Command(config.Reader, results[*open-1])
+		cmd.Start()
+	} else {
+		// Print matches
+		for i, match := range results {
+			if *printpath {
+				fmt.Println(i+1, match)
+			} else {
+				fmt.Println(i+1, filepath.Base(match))
+			}
+		}
 	}
 }
