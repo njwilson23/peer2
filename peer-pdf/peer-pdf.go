@@ -14,14 +14,24 @@ import (
 // peer-pdf [query] [-r] [-p] [-o N]
 
 // Walk a root, sending file matches to out channel
-func SearchRoot(root string, searchstr string, out *[]string) {
+func SearchRoot(root string, searchstrs *[]string, out *[]string) {
 	filepath.Walk(root, func(fnm string, info os.FileInfo, err error) error {
 		if err != nil {
 			fmt.Println("ERROR:", fnm, err)
 			return filepath.SkipDir
 		}
+
+		var match bool
 		if strings.ToLower(filepath.Ext(fnm)) == ".pdf" {
-			if strings.Contains(strings.ToLower(fnm), searchstr) {
+
+			match = true
+			for _, searchstr := range *searchstrs {
+				if !strings.Contains(strings.ToLower(fnm), searchstr) {
+					match = false
+					break
+				}
+			}
+			if match {
 				*out = append(*out, fnm)
 			}
 		}
