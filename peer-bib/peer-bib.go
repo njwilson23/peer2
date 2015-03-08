@@ -12,7 +12,12 @@ import (
 
 func main() {
 
-	config := config.ParseConfig(".peer.yaml")
+	configPath, err := config.FindConfig()
+	if err != nil {
+		fmt.Println(err)
+		panic(err.Error())
+	}
+	config := config.ParseConfig(configPath)
 
 	// Parse command line options
 	//fnmSearch := flag.String("file", os.Args[1], "Search filenames")
