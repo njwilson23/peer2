@@ -13,7 +13,7 @@ import (
 // USAGE:
 // peer-pdf [query] [-r] [-p] [-o N]
 
-// Walk a root, sending file matches to out channel
+// Walk a root, sending file matches to a slice
 func SearchRoot(root string, searchstrs *[]string, out *[]string) {
 	filepath.Walk(root, func(fnm string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -26,7 +26,7 @@ func SearchRoot(root string, searchstrs *[]string, out *[]string) {
 
 			match = true
 			for _, searchstr := range *searchstrs {
-				if !strings.Contains(strings.ToLower(fnm), searchstr) {
+				if !strings.Contains(strings.ToLower(fnm), strings.ToLower(searchstr)) {
 					match = false
 					break
 				}
