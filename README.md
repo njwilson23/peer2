@@ -7,21 +7,21 @@ Python to Go. It also includes a simple BibTeX parser.
 
 - Search for PDFs
 
-    `peer pdf search_times...`
+    `peer pdf search_terms...`
 
-- Open a matching PDFs
+- Open a matching PDF
 
-    `peer pdf -o N search_terms...`
+    `peer pdf search_terms... -o N`
 
 - Scan BibTeX for references
 
-    `peer bib -author Jenkins -year 1999`
+    `peer bib --author Jenkins --year 1999`
 
 ## Things it might someday do:
 
 - return formatted references
 
-    `peer ref -style agu08.bst -author Jenkins -year 1999`
+    `peer ref --style agu08.bst --author Jenkins --year 1999`
 
 - add papers to bibtex file
 
