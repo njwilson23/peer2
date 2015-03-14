@@ -118,6 +118,24 @@ func TestSanitize(t *testing.T) {
 	}
 }
 
+func TestUnicodeBibValue(t *testing.T) {
+	var testStr, outStr string
+
+	testStr = "	Quantifying melt rates under {G}reenland's {N}ioghalvfjerdsbr{\\ae}"
+	outStr = UnicodeBibValue(testStr)
+	if outStr != "Quantifying melt rates under Greenland's Nioghalvfjerdsbræ" {
+		fmt.Println(outStr)
+		t.Fail()
+	}
+
+	testStr = "\t{M\\\"unchow}"
+	outStr = UnicodeBibValue(testStr)
+	if outStr != "Műnchow" {
+		fmt.Println(outStr)
+		t.Fail()
+	}
+}
+
 func TestCombineRunningLinesBraces(t *testing.T) {
 	entry_str := `@Article{Roache:1985:NAG,
   author =       {Patrick J. Roache and Stanly Steinberg},

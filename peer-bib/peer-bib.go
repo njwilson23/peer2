@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/njwilson23/peer2/bibtex"
-	"github.com/njwilson23/peer2/config"
+	"github.com/njwilson23/peer/bibtex"
+	"github.com/njwilson23/peer/config"
 )
 
 // USAGE:
@@ -47,8 +47,6 @@ func main() {
 			if entry.TestAuthor(*authorSearch) &&
 				entry.TestTitle(*titleSearch) &&
 				entry.TestYear(*yearSearch) {
-				//fmt.Println(entry)
-				//fmt.Println(fmt.Sprintf("%v (%v), \"%v\"", entry.Author, entry.Year, entry.Title))
 				matches = append(matches, entry)
 			}
 
@@ -57,7 +55,11 @@ func main() {
 
 	// Print the results
 	for _, entry := range matches {
-		fmt.Println(fmt.Sprintf("%v (%v), \"%v\"", entry.Author, entry.Year, entry.Title))
+		fmt.Println(fmt.Sprintf("@%v\n%v (%v)\n\t\"%v\"\n",
+			entry.BibTeXkey,
+			entry.Author,
+			entry.Year,
+			entry.Title))
 	}
 
 }

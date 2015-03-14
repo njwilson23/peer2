@@ -45,6 +45,18 @@ func (err ParseError) Error() string {
 	return fmt.Sprintf(err.Message)
 }
 
+// Given a string that is a valid BibTeX value, return a unicode representation
+func UnicodeBibValue(str string) string {
+	var ustr string
+	ustr = strings.Replace(str, "\\\"o", "ő", -1)
+	ustr = strings.Replace(ustr, "\\\"u", "ű", -1)
+	ustr = strings.Replace(ustr, "{\\ae}", "æ", -1)
+	ustr = strings.Replace(ustr, "{", "", -1)
+	ustr = strings.Replace(ustr, "}", "", -1)
+	ustr = strings.Trim(ustr, " \t,\"")
+	return ustr
+}
+
 // Given a line from a BibTeX file, attempt to return a key : value pair
 func ParseLine(s string) (string, string, error) {
 	var key, value string
@@ -52,7 +64,7 @@ func ParseLine(s string) (string, string, error) {
 	if strings.ContainsRune(s, '=') {
 		pieces := strings.Split(s, "=")
 		key = strings.ToLower(strings.Trim(pieces[0], " \t"))
-		value = strings.Trim(pieces[1], " \t{},\"")
+		value = UnicodeBibValue(pieces[1])
 	} else if strings.HasPrefix(s, "@") {
 		key = "BibTeXkey"
 		value = strings.TrimSuffix(strings.Split(s, "{")[1], ",")
