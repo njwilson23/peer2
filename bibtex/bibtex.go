@@ -62,23 +62,6 @@ func ParseLine(s string) (string, string, error) {
 	return key, value, err
 }
 
-// BibTeX can use either curly braces or quotation marks to enclose content.
-// This indentifies which convention is being used.
-/*func enclosingmark(line string) (rune, error) {
-	var sym rune
-	var err error
-	idx := strings.Index(line, "=")
-	if idx == -1 {
-		err = ParseError{"no equals sign to split tag from content"}
-		sym = ' '
-	} else {
-		jdx := strings.IndexAny(line[idx:], "{\"")
-		r := []rune(line)
-		sym = r[idx+jdx]
-	}
-	return sym, err
-}*/
-
 // Given an array of lines representing a complete BibTeX entry, return an Entry
 // type
 func ParseEntry(lines []string) (Entry, error) {
