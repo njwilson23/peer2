@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/njwilson23/peer2/config"
+	"github.com/njwilson23/peer/config"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -59,9 +59,15 @@ func main() {
 		os.Exit(1)
 	}
 	if len(config.SearchRoots) == 0 {
-		fmt.Println("ERROR: list of search roots is empty")
+		fmt.Println("WARNING: list of search roots is empty")
+	}
+	/* curdir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("ERROR: cannot detect current directory")
+		fmt.Println(err)
 		os.Exit(1)
 	}
+	roots := append(config.SearchRoots, curdir) */
 
 	// Search each directory root
 	results := make([]string, 0)
