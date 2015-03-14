@@ -30,7 +30,8 @@ func (e Entry) TestAuthor(auth string) bool {
 }
 
 func (e Entry) TestTitle(title string) bool {
-	return title == "" || strings.Contains(e.Title, title)
+	titleLower := strings.ToLower(title)
+	return titleLower == "" || strings.Contains(strings.ToLower(e.Title), titleLower)
 }
 
 func (e Entry) TestYear(year int) bool {

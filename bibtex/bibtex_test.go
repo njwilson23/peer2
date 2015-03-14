@@ -72,9 +72,9 @@ func TestSearchAuthor(t *testing.T) {
 }
 
 func TestSearchTitle(t *testing.T) {
-	entries := readtoarray("macsyma.bib")
 
 	// Test 1
+	entries := readtoarray("macsyma.bib")
 	results := SearchTitle(entries, "variational formulation")
 	if len(results) == 0 {
 		fmt.Println("No entries found matching 'variational formulation'")
@@ -86,11 +86,12 @@ func TestSearchTitle(t *testing.T) {
 	}
 
 	// Test 2 - title searches should be case-insensitive
-	/*results = SearchTitle(entries, "jakobshavn")
+	entries = readtoarray("test.bib")
+	results = SearchTitle(entries, "jakobshavn")
 	if len(results) == 0 {
 		fmt.Println("No entries found matching 'jakobshavn'")
 		t.Fail()
-	}*/
+	}
 }
 
 func TestSearchYear(t *testing.T) {
