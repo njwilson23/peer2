@@ -1,9 +1,9 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/njwilson23/peer/config"
+	"launchpad.net/gnuflag"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,9 +42,9 @@ func SearchRoot(root string, searchstrs *[]string, out *[]string) {
 func main() {
 
 	var searchstrs []string
-	open := flag.Int("o", 0, "Open option N using the configured reader")
-	printpath := flag.Bool("p", false, "Print full paths")
-	flag.Parse()
+	open := gnuflag.Int("o", 0, "Open option N using the configured reader")
+	printpath := gnuflag.Bool("p", false, "Print full paths")
+	gnuflag.Parse(true)
 
 	configPath, err := config.FindConfig()
 	if err != nil {
@@ -52,8 +52,8 @@ func main() {
 	}
 	config := config.ParseConfig(configPath)
 
-	if len(flag.Args()) != 0 {
-		searchstrs = flag.Args()
+	if len(gnuflag.Args()) != 0 {
+		searchstrs = gnuflag.Args()
 	} else {
 		fmt.Println("ERROR: must provide at least one search query")
 		os.Exit(1)

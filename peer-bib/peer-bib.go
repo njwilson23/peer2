@@ -1,10 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/njwilson23/peer/bibtex"
 	"github.com/njwilson23/peer/config"
+	"launchpad.net/gnuflag"
 )
 
 // USAGE:
@@ -20,15 +20,15 @@ func main() {
 	config := config.ParseConfig(configPath)
 
 	// Parse command line options
-	//fnmSearch := flag.String("file", os.Args[1], "Search filenames")
-	authorSearch := flag.String("author", "", "Search authors in BibTeX database")
-	titleSearch := flag.String("title", "", "Search titles in BibTeX database")
-	yearSearch := flag.Int("year", -999, "Restrict matches to YEAR")
+	//fnmSearch := gnuflag.String("file", os.Args[1], "Search filenames")
+	authorSearch := gnuflag.String("author", "", "Search authors in BibTeX database")
+	titleSearch := gnuflag.String("title", "", "Search titles in BibTeX database")
+	yearSearch := gnuflag.Int("year", -999, "Restrict matches to YEAR")
 
-	bibfile := flag.String("bibfile", "", "Location of BibTeX database")
-	//openMatch := flag.Int("o", -1, "Open best matching file")
+	bibfile := gnuflag.String("bibfile", "", "Location of BibTeX database")
+	//openMatch := gnuflag.Int("o", -1, "Open best matching file")
 
-	flag.Parse()
+	gnuflag.Parse(true)
 
 	if *bibfile != "" {
 		config.Bibfiles = append(config.Bibfiles, *bibfile)
