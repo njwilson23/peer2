@@ -9,7 +9,9 @@ import (
 func main() {
 	var cmd *exec.Cmd
 	if os.Args[1] == "bib" {
-		cmd = exec.Command("peer-bib", os.Args[1:]...)
+		cmd = exec.Command("peer-bib", os.Args[2:]...)
+	} else if os.Args[1] == "pdf" {
+		cmd = exec.Command("peer-pdf", os.Args[2:]...)
 	} else {
 		cmd = exec.Command("peer-pdf", os.Args[1:]...)
 	}
