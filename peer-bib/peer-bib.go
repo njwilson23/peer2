@@ -5,6 +5,7 @@ import (
 	"github.com/njwilson23/peer/bibtex"
 	"github.com/njwilson23/peer/config"
 	"launchpad.net/gnuflag"
+	"sort"
 )
 
 // USAGE:
@@ -53,7 +54,7 @@ func main() {
 		}
 	}
 
-	// Print the results
+	sort.Sort(bibtex.ByYear(matches))
 	for _, entry := range matches {
 		fmt.Println(fmt.Sprintf("@%v\n%v (%v)\n\t\"%v\"\n",
 			entry.BibTeXkey,

@@ -7,11 +7,30 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 )
 
 // USAGE:
 // peer-pdf [query] [-r] [-p] [-o N]
+
+type ByYearStr []string
+
+func (a ByYearStr) Len() int      { return len(a) }
+func (a ByYearStr) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByYearStr) Less(i, j int) bool {
+	reYear := regexp.MustCompile(`[0-9]{4}`)
+	iyears := reYear.FindString(a[i])
+	jyears := reYear.FindString(a[j])
+	iyear, jyear := 0, 1
+	if iyears != "" && jyears != "" {
+		iyear, _ = strconv.Atoi(iyears)
+		jyear, _ = strconv.Atoi(jyears)
+	}
+	return iyear < jyear
+}
 
 // Walk a root, sending file matches to a slice
 func SearchRoot(root string, searchstrs *[]string, out *[]string) {
@@ -75,6 +94,7 @@ func main() {
 		SearchRoot(root, &searchstrs, &results)
 	}
 
+	sort.Sort(ByYearStr(results))
 	if *open != 0 {
 		cmd := exec.Command(config.Reader, results[*open-1])
 		cmd.Start()

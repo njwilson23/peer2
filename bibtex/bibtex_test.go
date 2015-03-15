@@ -3,6 +3,7 @@ package bibtex
 import (
 	"fmt"
 	"io/ioutil"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -218,5 +219,21 @@ func TestCombineRunningLinesInFile(t *testing.T) {
 	joinedlines := combinerunninglines(lines)
 	if len(joinedlines) != 6384 {
 		fmt.Println(fmt.Sprintf("unexpected number of lines (%v)", len(joinedlines)))
+	}
+}
+
+func TestSortEntries(t *testing.T) {
+	entries := []Entry{Entry{"FirstTitle", "A. Hodges", 1973, "Tests and Units", "@Hodges1973First"},
+		Entry{"SecondTitle", "Dana Sukoi", 1985, "Reproducibility Mechanics", "@Sukoi1985Second"},
+		Entry{"ThirdTitle", "Carl McIntyre", 1968, "Journal of Validation", "@McIntyre1968Third"}}
+	sort.Sort(ByYear(entries))
+	if entries[0].Title != "ThirdTitle" {
+		t.Fail()
+	}
+	if entries[1].Title != "FirstTitle" {
+		t.Fail()
+	}
+	if entries[2].Title != "SecondTitle" {
+		t.Fail()
 	}
 }

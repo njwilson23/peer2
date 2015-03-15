@@ -16,6 +16,13 @@ type Entry struct {
 	BibTeXkey string
 }
 
+// Interface for sorting
+type ByYear []Entry
+
+func (a ByYear) Len() int           { return len(a) }
+func (a ByYear) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByYear) Less(i, j int) bool { return a[i].Year < a[j].Year }
+
 func (entry Entry) String() string {
 	return fmt.Sprintf("@%v\nTitle: \"%v\"\nAuthor: %v\nYear: %v\nJournal: %v\n",
 		entry.BibTeXkey,
