@@ -96,8 +96,13 @@ func main() {
 
 	sort.Sort(ByYearStr(results))
 	if *open != 0 {
-		cmd := exec.Command(config.Reader, results[*open-1])
-		cmd.Start()
+		// Open selection
+		if (*open > len(results)) || (*open < 0) {
+			fmt.Println("Index outside range of results found")
+		} else {
+			cmd := exec.Command(config.Reader, results[*open-1])
+			cmd.Start()
+		}
 	} else {
 		// Print matches
 		for i, match := range results {
