@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/njwilson23/peer/config"
+	"io/ioutil"
 	"launchpad.net/gnuflag"
 	"os"
 	"os/exec"
@@ -32,30 +33,57 @@ func (a ByYearStr) Less(i, j int) bool {
 	return iyear < jyear
 }
 
+func TestFilename(fnm string, searchstrs *[]string) bool {
+
+	match := false
+
+	if strings.ToLower(filepath.Ext(fnm)) == ".pdf" {
+
+		match = true
+
+		for _, searchstr := range *searchstrs {
+			if !strings.Contains(strings.ToLower(fnm), strings.ToLower(searchstr)) {
+				match = false
+				break
+			}
+		}
+	}
+
+	return match
+}
+
 // Walk a root, sending file matches to a slice
 func SearchRoot(root string, searchstrs *[]string, out *[]string) {
+
 	filepath.Walk(root, func(fnm string, info os.FileInfo, err error) error {
+
 		if err != nil {
 			fmt.Println("ERROR:", fnm, err)
 			return filepath.SkipDir
 		}
 
-		var match bool
-		if strings.ToLower(filepath.Ext(fnm)) == ".pdf" {
-
-			match = true
-			for _, searchstr := range *searchstrs {
-				if !strings.Contains(strings.ToLower(fnm), strings.ToLower(searchstr)) {
-					match = false
-					break
-				}
-			}
-			if match {
-				*out = append(*out, fnm)
-			}
+		if TestFilename(fnm, searchstrs) {
+			*out = append(*out, fnm)
 		}
+
 		return nil
 	})
+}
+
+func SearchDir(dirname string, searchstrs *[]string, out *[]string) {
+
+	infos, err := ioutil.ReadDir(dirname)
+
+	if err != nil {
+		fmt.Println("ERROR:", dirname, err)
+	} else {
+
+		for _, info := range infos {
+			if TestFilename(info.Name(), searchstrs) {
+				*out = append(*out, info.Name())
+			}
+		}
+	}
 }
 
 func main() {
@@ -80,16 +108,19 @@ func main() {
 	if len(config.SearchRoots) == 0 {
 		fmt.Println("WARNING: list of search roots is empty")
 	}
-	/* curdir, err := os.Getwd()
+
+	results := make([]string, 0)
+
+	// Search current directory
+	curdir, err := os.Getwd()
 	if err != nil {
 		fmt.Println("ERROR: cannot detect current directory")
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	roots := append(config.SearchRoots, curdir) */
+	SearchDir(curdir, &searchstrs, &results)
 
 	// Search each directory root
-	results := make([]string, 0)
 	for _, root := range config.SearchRoots {
 		SearchRoot(root, &searchstrs, &results)
 	}
