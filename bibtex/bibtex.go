@@ -214,9 +214,8 @@ func Read(fnm string, entries chan Entry) {
 	}
 }
 
-// Removes LaTeX-y symbols from *s*. If *lc* is true, then result is converted
-// to lower case
-func sanitize(s string, lc bool) string {
+// Removes LaTeX-y symbols from *s*.
+func sanitize(s string) string {
 	out := s
 	if strings.Contains(s, "\\\"") {
 		out = strings.Replace(out, "\\\"", "", -1)
@@ -227,9 +226,6 @@ func sanitize(s string, lc bool) string {
 		out = strings.Replace(out, "\\", "", -1)
 		out = strings.Replace(out, "'", "", -1)
 	}
-	if lc {
-		out = strings.ToLower(out)
-	}
 	return out
 }
 
@@ -237,7 +233,7 @@ func sanitize(s string, lc bool) string {
 func SearchAuthor(entries []Entry, s string) []Entry {
 	found := make([]Entry, 0)
 	for _, entry := range entries {
-		auth := sanitize(entry.Author, false)
+		auth := sanitize(entry.Author)
 		if strings.Contains(auth, s) {
 			found = append(found, entry)
 		}
@@ -250,7 +246,7 @@ func SearchTitle(entries []Entry, s string) []Entry {
 	found := make([]Entry, 0)
 	s = strings.ToLower(s)
 	for _, entry := range entries {
-		title := sanitize(entry.Title, true)
+		title := strings.ToLower(sanitize(entry.Title))
 		if strings.Contains(title, s) {
 			found = append(found, entry)
 		}

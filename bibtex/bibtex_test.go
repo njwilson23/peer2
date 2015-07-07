@@ -106,16 +106,16 @@ func TestSearchYear(t *testing.T) {
 
 func TestSanitize(t *testing.T) {
 	difficult_name := "Bengt M{\\aa}rtensson"
-	if sanitize(difficult_name, false) != "Bengt Maartensson" {
+	if sanitize(difficult_name) != "Bengt Maartensson" {
 		fmt.Println("expected 'Bengt Maartensson' but got",
-			sanitize(difficult_name, false))
+			sanitize(difficult_name))
 		t.Fail()
 	}
 
 	difficult_word := "M\\'elange"
-	if sanitize(difficult_word, true) != "melange" {
+	if strings.ToLower(sanitize(difficult_word)) != "melange" {
 		fmt.Println("expected 'melange' but got",
-			sanitize(difficult_word, true))
+			strings.ToLower(sanitize(difficult_word)))
 		t.Fail()
 	}
 }
