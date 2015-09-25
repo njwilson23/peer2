@@ -91,6 +91,7 @@ func main() {
 	var searchstrs []string
 	open := gnuflag.Int("o", 0, "Open option N using the configured reader")
 	printpath := gnuflag.Bool("p", false, "Print full paths")
+	rawpath := gnuflag.Bool("r", false, "Return raw paths")
 	gnuflag.Parse(true)
 
 	configPath, err := config.FindConfig()
@@ -136,11 +137,16 @@ func main() {
 		}
 	} else {
 		// Print matches
-		for i, match := range results {
-			if *printpath {
-				fmt.Println(i+1, match)
-			} else {
-				fmt.Println(i+1, filepath.Base(match))
+		if *rawpath {
+			fmt.Print(strings.Trim(fmt.Sprint(results), "[]"))
+		} else {
+
+			for i, match := range results {
+				if *printpath {
+					fmt.Println(i+1, match)
+				} else {
+					fmt.Println(i+1, filepath.Base(match))
+				}
 			}
 		}
 	}
