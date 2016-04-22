@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/njwilson23/peer/config"
+	"github.com/njwilson23/peer2/config"
 	"io/ioutil"
 	"launchpad.net/gnuflag"
 	"os"

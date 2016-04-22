@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/njwilson23/peer/bibtex"
-	"github.com/njwilson23/peer/config"
+	"github.com/njwilson23/peer2/bibtex"
+	"github.com/njwilson23/peer2/config"
 	"launchpad.net/gnuflag"
 	"sort"
 )
