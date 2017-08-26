@@ -173,7 +173,7 @@ func main() {
 
 	if *open != 0 {
 		// Open selection
-		if (*open > len(results)) || (*open < 0) {
+		if (*open > len(foundfiles)) || (*open < 0) {
 			fmt.Println("Index outside range of results found")
 		} else {
 			cmd := exec.Command(config.Reader, foundfiles[*open-1].Filename)
@@ -182,7 +182,7 @@ func main() {
 	} else {
 		// Print matches
 		if *rawpath {
-			fmt.Print(strings.Trim(fmt.Sprint(results), "[]"))
+			fmt.Print(strings.Trim(fmt.Sprint(foundfiles), "[]"))
 		} else {
 
 			for i, match := range foundfiles {
