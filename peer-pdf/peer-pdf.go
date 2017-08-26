@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/njwilson23/peer2/config"
 	"io/ioutil"
-	"launchpad.net/gnuflag"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,19 +10,36 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/njwilson23/peer2/config"
+	"launchpad.net/gnuflag"
 )
 
 // USAGE:
 // peer-pdf [query] [-r] [-p] [-o N]
 
-type ByYearStr []string
+// MatchedFile represents a PDF file found matching the search
+type MatchedFile struct {
+	Filename string
+	Priority int
+}
 
-func (a ByYearStr) Len() int      { return len(a) }
-func (a ByYearStr) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByYearStr) Less(i, j int) bool {
+// ForConsole arranges PDF files in order for console printing
+type ForConsole []MatchedFile
+
+func (a ForConsole) Len() int      { return len(a) }
+func (a ForConsole) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+
+// Sort by priority, then by year
+func (a ForConsole) Less(i, j int) bool {
+
+	if a[i].Priority != a[j].Priority {
+		return a[i].Priority < a[j].Priority
+	}
 	reYear := regexp.MustCompile(`[0-9]{4}`)
-	iyears := reYear.FindString(a[i])
-	jyears := reYear.FindString(a[j])
+	iyears := reYear.FindString(a[i].Filename)
+	jyears := reYear.FindString(a[j].Filename)
 	iyear, jyear := 0, 1
 	if iyears != "" && jyears != "" {
 		iyear, _ = strconv.Atoi(iyears)
@@ -33,7 +48,8 @@ func (a ByYearStr) Less(i, j int) bool {
 	return iyear < jyear
 }
 
-func TestFilename(fnm string, searchstrs *[]string) bool {
+// TestFilename checks whether a filename is matched by any of the search strings
+func TestFilename(fnm string, searchstrs []string) bool {
 
 	match := false
 
@@ -41,7 +57,7 @@ func TestFilename(fnm string, searchstrs *[]string) bool {
 
 		match = true
 
-		for _, searchstr := range *searchstrs {
+		for _, searchstr := range searchstrs {
 			if !strings.Contains(strings.ToLower(fnm), strings.ToLower(searchstr)) {
 				match = false
 				break
@@ -52,8 +68,8 @@ func TestFilename(fnm string, searchstrs *[]string) bool {
 	return match
 }
 
-// Walk a root, sending file matches to a slice
-func SearchRoot(root string, searchstrs *[]string, out *[]string) {
+// SearchRecursive walks a root, sending file matches to a channel
+func SearchRecursive(root string, searchstrs []string, out chan<- MatchedFile, done chan<- bool) {
 
 	filepath.Walk(root, func(fnm string, info os.FileInfo, err error) error {
 
@@ -63,14 +79,17 @@ func SearchRoot(root string, searchstrs *[]string, out *[]string) {
 		}
 
 		if TestFilename(fnm, searchstrs) {
-			*out = append(*out, fnm)
+			out <- MatchedFile{Filename: fnm, Priority: 2}
 		}
 
 		return nil
 	})
+
+	done <- true
 }
 
-func SearchDir(dirname string, searchstrs *[]string, out *[]string) {
+// Search checks a directory without recursing, sending matches to a channel
+func Search(dirname string, searchstrs []string, out chan<- MatchedFile, done chan<- bool) {
 
 	infos, err := ioutil.ReadDir(dirname)
 
@@ -80,10 +99,12 @@ func SearchDir(dirname string, searchstrs *[]string, out *[]string) {
 
 		for _, info := range infos {
 			if TestFilename(info.Name(), searchstrs) {
-				*out = append(*out, info.Name())
+				out <- MatchedFile{Filename: info.Name(), Priority: 0}
 			}
 		}
 	}
+
+	done <- true
 }
 
 func main() {
@@ -110,7 +131,9 @@ func main() {
 		fmt.Println("WARNING: list of search roots is empty")
 	}
 
-	results := make([]string, 0)
+	results := make(chan MatchedFile)
+	done := make(chan bool)
+	nrunning := 0
 
 	// Search current directory
 	curdir, err := os.Getwd()
@@ -119,20 +142,41 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	SearchDir(curdir, &searchstrs, &results)
+	go Search(curdir, searchstrs, results, done)
+	nrunning++
 
 	// Search each directory root
 	for _, root := range config.SearchRoots {
-		SearchRoot(root, &searchstrs, &results)
+		go SearchRecursive(root, searchstrs, results, done)
+		nrunning++
 	}
 
-	sort.Sort(ByYearStr(results))
+	ncompleted := 0
+	var foundfiles []MatchedFile
+	for {
+		select {
+		case match := <-results:
+			foundfiles = append(foundfiles, match)
+		case <-done:
+			ncompleted++
+		case <-time.After(10 * time.Second):
+			ncompleted = nrunning
+		}
+		if ncompleted == nrunning {
+			//close(done)
+			//close(results)
+			break
+		}
+	}
+
+	sort.Sort(ForConsole(foundfiles))
+
 	if *open != 0 {
 		// Open selection
 		if (*open > len(results)) || (*open < 0) {
 			fmt.Println("Index outside range of results found")
 		} else {
-			cmd := exec.Command(config.Reader, results[*open-1])
+			cmd := exec.Command(config.Reader, foundfiles[*open-1].Filename)
 			cmd.Start()
 		}
 	} else {
@@ -141,11 +185,11 @@ func main() {
 			fmt.Print(strings.Trim(fmt.Sprint(results), "[]"))
 		} else {
 
-			for i, match := range results {
+			for i, match := range foundfiles {
 				if *printpath {
 					fmt.Println(i+1, match)
 				} else {
-					fmt.Println(i+1, filepath.Base(match))
+					fmt.Println(i+1, filepath.Base(match.Filename))
 				}
 			}
 		}
