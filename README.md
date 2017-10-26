@@ -1,21 +1,21 @@
-# peer (2)
+# peer
 
-This is a for-fun rewrite of [peer](https://github.com/njwilson23/peer) from
-Python to Go. It also includes a simple BibTeX parser.
+This is a simple PDF and BibTeX search tool. It started as a bash script,
+then a Python program, and now it's written in go.
 
 ## Things it does:
 
-- Search for PDFs
+- Search for PDFs by name
 
-    `peer pdf search_terms...`
+    `peer search_term1 [search_term2...]`
 
 - Open a matching PDF
 
-    `peer pdf search_terms... -o N`
+    `peer -o N search_terms...`
 
 - Scan BibTeX for references
 
-    `peer bib --author Jenkins --year 1999`
+    `peer --bibtex bibfile.bib --author Jenkins --year 1999`
 
 ## Things it might someday do:
 
@@ -25,7 +25,7 @@ Python to Go. It also includes a simple BibTeX parser.
 
 - add papers to bibtex file
 
-	`peer import fnm`
+    `peer import fnm`
 
 - manage a reference database, sorting and updating as new papers are downloaded
 

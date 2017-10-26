@@ -42,7 +42,7 @@ func (e Entry) TestTitle(title string) bool {
 }
 
 func (e Entry) TestYear(year int) bool {
-	return year == -999 || e.Year == year
+	return year == -1000000 || e.Year == year
 }
 
 type ParseError struct {
