@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"sort"
+	"strings"
 
-	"github.com/njwilson23/peer2/bibtex"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -16,7 +15,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "peer"
 	app.Version = "0.3.0dev"
-	app.Usage = "peer [--bibtex bibfile] [--path filepath] [--open N] [--reference N] search_terms..."
+	app.Usage = "peer [--path FILEPATH] [--open N] [--reference N] SEARCH_TERMS..."
 
 	wd, err := os.Getwd()
 	if err != nil {
@@ -35,64 +34,14 @@ func main() {
 			Value: -1,
 			Usage: "Open one of the search results",
 		},
-		cli.StringFlag{
-			Name:  "bibtex, b",
-			Value: "",
-			Usage: "Search a configured BibTeX file",
-		},
-		cli.StringFlag{
-			Name:  "author",
-			Value: "",
-			Usage: "Author filter for BibTeX searches",
-		},
-		cli.StringFlag{
-			Name:  "title",
-			Value: "",
-			Usage: "Title filter for BibTeX searches",
-		},
-		cli.IntFlag{
-			Name:  "year",
-			Value: -1000000,
-			Usage: "Published year filter for BibTeX searches",
+		cli.BoolFlag{
+			Name:  "print0",
+			Usage: "Print results seperated by a space",
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
-		// search bibtex
-		if c.String("bibtex") != "" {
 
-			var bibtexResults []bibtex.Entry
-			searchAuthor := c.String("author")
-			searchTitle := c.String("title")
-			searchYear := c.Int("year")
-
-			bibfile := c.String("bibtex")
-			entries := make(chan bibtex.Entry)
-			go bibtex.Read(bibfile, entries)
-
-			for entry := range entries {
-
-				if entry.TestAuthor(searchAuthor) &&
-					entry.TestTitle(searchTitle) &&
-					entry.TestYear(searchYear) {
-					bibtexResults = append(bibtexResults, entry)
-				}
-
-			}
-
-			sort.Sort(bibtex.ByYear(bibtexResults))
-			for _, entry := range bibtexResults {
-				fmt.Println(fmt.Sprintf("@%v\n%v (%v)\n\t\"%v\"\n",
-					entry.BibTeXkey,
-					entry.Author,
-					entry.Year,
-					entry.Title))
-			}
-
-			return nil
-		}
-
-		// search PDFs
 		searchTerms := c.Args()
 		if len(searchTerms) == 0 {
 			return errors.New("at least one search term must be provided")
@@ -107,6 +56,15 @@ func main() {
 			}
 			cmd := exec.Command("evince", results[idx-1].path)
 			cmd.Start()
+		}
+
+		if c.Bool("print0") {
+			names := make([]string, len(results))
+			for i, r := range results {
+				names[i] = r.path
+			}
+			fmt.Println(strings.Join(names, " "))
+			return nil
 		}
 
 		for _, result := range results {
