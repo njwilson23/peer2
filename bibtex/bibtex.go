@@ -66,7 +66,7 @@ func UnicodeBibValue(str string) string {
 }
 
 // Given a line from a BibTeX file, attempt to return a key : value pair
-func ParseLine(s string) (string, string, error) {
+func parseLine(s string) (string, string, error) {
 	var key, value string
 	var err error
 	if strings.ContainsRune(s, '=') {
@@ -84,12 +84,12 @@ func ParseLine(s string) (string, string, error) {
 
 // Given an array of lines representing a complete BibTeX entry, return an Entry
 // type
-func ParseEntry(lines []string) (Entry, error) {
+func parseEntry(lines []string) (Entry, error) {
 	var err error
 	var title, author, journal, key string
 	var year int
 	for _, line := range lines {
-		switch k, v, _ := ParseLine(line); k {
+		switch k, v, _ := parseLine(line); k {
 		case "author":
 			author = v
 		case "title":
@@ -156,7 +156,7 @@ func combinerunninglines(lines []string) []string {
 	return joinedlines
 }
 
-func ParseEntries(lines []string, entries chan Entry) error {
+func parseEntries(lines []string, entries chan Entry) error {
 	var depth, start int
 	var err error
 	joinedlines := combinerunninglines(lines)
@@ -168,7 +168,7 @@ func ParseEntries(lines []string, entries chan Entry) error {
 			if inentry {
 				// end of entry
 				inentry = false
-				entry, err := ParseEntry(joinedlines[start : i+1])
+				entry, err := parseEntry(joinedlines[start : i+1])
 				if err == nil {
 					entries <- entry
 				} else {
@@ -200,7 +200,7 @@ func ParseEntries(lines []string, entries chan Entry) error {
 
 // Open and read a BibTeX database and return an array of BibTeX entries
 // This prints any errors raised
-func Read(fnm string, entries chan Entry) {
+func ReadBibTeX(fnm string, entries chan Entry) {
 	defer close(entries)
 	data, err := ioutil.ReadFile(fnm)
 	if err != nil {
@@ -208,7 +208,7 @@ func Read(fnm string, entries chan Entry) {
 		return
 	}
 	lines := strings.Split(string(data), "\n")
-	err = ParseEntries(lines, entries)
+	err = parseEntries(lines, entries)
 	if err != nil {
 		fmt.Println(err)
 	}

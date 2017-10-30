@@ -62,7 +62,7 @@ func main() {
 
 		bibfile := c.String("bibtex")
 		entries := make(chan Entry)
-		go Read(bibfile, entries)
+		go ReadBibTeX(bibfile, entries)
 
 		for entry := range entries {
 
