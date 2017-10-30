@@ -18,19 +18,7 @@ func main() {
 
 	inputPath := os.Args[1]
 
-	stopWords := map[string]bool{
-		"a":     true,
-		"an":    true,
-		"he":    true,
-		"her":   true,
-		"his":   true,
-		"she":   true,
-		"the":   true,
-		"their": true,
-		"they":  true,
-	}
-
-	counts, err := processContentStreams(inputPath, stopWords)
+	counts, err := processContentStreams(inputPath, stopWordsMongoDB())
 	for k, v := range counts {
 		fmt.Println(k, v)
 	}
